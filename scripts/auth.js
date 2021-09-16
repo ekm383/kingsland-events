@@ -27,20 +27,15 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     // User signed in
     const { uid, email } = user;
-    console.log(uid, email);
+    console.log(email, uid);
+    ui.hideViews();
     document.querySelector("body > nav > div > a:nth-child(3)").innerHTML =
       email;
     document.querySelector("body > nav > div > a:nth-child(5)").innerHTML = "";
   } else {
-    // User is signed out
-    ui.view404("none");
-    ui.viewEventsHolder("none");
-    ui.viewOrganizeEvent("none");
-    ui.viewEditEvent("none");
-    ui.viewEventDetails("none");
-    ui.viewSignIn("none");
-    ui.viewSignUp("none");
-    ui.viewUserDetails("none");
+    ui.hideViews();
+    ui.viewHeader();
+    ui.viewEventsHolder("display: none");
     document.querySelector("body > nav > div > a:nth-child(2)").innerHTML = "";
     document.querySelector("body > nav > div > a:nth-child(3)").innerHTML = "";
     document.querySelector("body > nav > div > a:nth-child(4)").innerHTML = "";
@@ -165,7 +160,18 @@ signInHandler.addEventListener("submit", (e) => {
       }, 1500);
     })
     .catch((error) => {
-      const errorCode = error.code;
-      const errorMessage = error.message;
+      Toastify({
+        text: "Incorrect credentials, try again.",
+        backgroundColor:
+          "linear-gradient(90deg, rgba(255,115,100,1) 0%, rgba(235,143,37,1) 100%)",
+        duration: 3000,
+      }).showToast();
+      document.getElementsByTagName(
+        "form"
+      )[2].childNodes[3].childNodes[1].value = "";
+      document.getElementsByTagName(
+        "form"
+      )[2].childNodes[5].childNodes[1].value = "";
+      console.log(error);
     });
 });
