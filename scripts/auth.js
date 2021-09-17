@@ -1,4 +1,5 @@
 import UI from "./UI.js";
+import { eventSetup } from "./index.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js";
 import {
   getAuth,
@@ -7,9 +8,15 @@ import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+} from "https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore.js";
 
-// Your web app's Firebase configuration
+/**
+ * Firebase Config
+ */
 const firebaseConfig = {
   apiKey: "AIzaSyDOM6ruVDca0p3lwpT-Bh0Th2kbK4Ae92Y",
   authDomain: "kingsland-events.firebaseapp.com",
@@ -22,13 +29,35 @@ const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 
+// Database call
+const querySnapshot = await getDocs(collection(db, "events"));
+
+/**
+ * Firebase Auth State
+ */
 onAuthStateChanged(auth, (user) => {
   const ui = new UI();
   if (user) {
     // User signed in
     const { uid, email } = user;
-    console.log(email, uid);
+
+    // Hide all Divs that are not selected
     ui.hideViews();
+
+    // Send data to the DOM
+    eventSetup(querySnapshot.docs);
+
+    // check if there are any events
+    const eventsContainer = document.querySelector("#eventsHolder");
+    if (eventsContainer.hasChildNodes()) {
+      document
+        .querySelector("body > div.container")
+        .setAttribute("style", "display: none");
+    } else {
+      document
+        .querySelector("body > div.container")
+        .setAttribute("style", "display: block");
+    }
     document.querySelector("body > nav > div > a:nth-child(3)").innerHTML =
       email;
     document.querySelector("body > nav > div > a:nth-child(5)").innerHTML = "";

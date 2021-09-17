@@ -55,3 +55,38 @@ organizeEvent.addEventListener("click", () => {
   const ui = new UI();
   ui.showView(viewOrganizeEvent);
 });
+
+// Create first Event
+const firstEventbutton = document.querySelector(
+  "body > div.container > div > div > div.error-template > div.actions > a"
+);
+firstEventbutton.addEventListener("click", () => {
+  let viewOrganizeEvent = document.querySelector("body > form:nth-child(6)");
+  const ui = new UI();
+  ui.showView(viewOrganizeEvent);
+});
+
+// Get Firebase Data
+export const eventSetup = (data) => {
+  const eventsHolder = document.querySelector("#eventsHolder");
+  data.forEach((doc) => {
+    const event = doc.data();
+    let div = `
+    <div class="bg-light mr-md-3 pt-3 px-3 pt-md-5 px-md-5 text-center overflow-hidden eventPlaceholder">
+        <div class="my-3 p-3">
+          <h2 class="display-5">${event.name}</h2>
+        </div>
+        <div>
+          <div class="img">
+            <img
+              class="eventPicture"
+              src="${event.image}"
+            />
+          </div>
+          <a href="#" class="eventDetails">More</a>
+        </div>
+      </div>
+  `;
+    eventsHolder.innerHTML += div;
+  });
+};
