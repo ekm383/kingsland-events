@@ -1,5 +1,5 @@
 import UI from "./UI.js";
-import { eventSetup } from "./index.js";
+import { eventSetup, eventDetails } from "./index.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js";
 import {
   getAuth,
@@ -12,6 +12,7 @@ import {
   getFirestore,
   collection,
   getDocs,
+  addDoc,
 } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore.js";
 
 /**
@@ -29,7 +30,7 @@ const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 
-// Database call
+// Get Data from Firestore Collection
 const querySnapshot = await getDocs(collection(db, "events"));
 
 /**
@@ -40,12 +41,17 @@ onAuthStateChanged(auth, (user) => {
   if (user) {
     // User signed in
     const { uid, email } = user;
+    localStorage.setItem("id", uid);
+    localStorage.setItem("email", email);
 
     // Hide all Divs that are not selected
     ui.hideViews();
 
     // Send data to the DOM
     eventSetup(querySnapshot.docs);
+    setTimeout(() => {
+      eventDetails(querySnapshot.docs);
+    }, 2000);
 
     // check if there are any events
     const eventsContainer = document.querySelector("#eventsHolder");
@@ -145,6 +151,9 @@ const logoutButton = document.querySelector(
 logoutButton.addEventListener("click", (e) => {
   e.preventDefault();
 
+  localStorage.removeItem("id");
+  localStorage.removeItem("email");
+
   signOut(auth)
     .then(() => {
       Toastify({
@@ -204,3 +213,54 @@ signInHandler.addEventListener("submit", (e) => {
       console.log(error);
     });
 });
+
+/**
+ * Create New Event
+ */
+const createEvent = document.querySelector("body > form:nth-child(6)")
+  .childNodes[11];
+createEvent.addEventListener("click", async (e) => {
+  e.preventDefault();
+
+  const userId = localStorage.getItem("id");
+
+  const name = document.querySelector("body > form:nth-child(6)").childNodes[3]
+    .childNodes[1].value;
+
+  const date = document.querySelector("body > form:nth-child(6)").childNodes[5]
+    .childNodes[1].value;
+
+  const description = document.querySelector("body > form:nth-child(6)")
+    .childNodes[7].childNodes[1].value;
+
+  const image = document.querySelector("body > form:nth-child(6)").childNodes[9]
+    .childNodes[1].value;
+  try {
+    const docRef = await addDoc(collection(db, "events"), {
+      name,
+      date,
+      description,
+      interested: 0,
+      organizer: userId,
+      image,
+    });
+
+    console.log("Document written with ID: ", docRef.id);
+  } catch (e) {
+    console.error("Error adding document: ", e);
+  }
+
+  Toastify({
+    text: "Added New Event!",
+    backgroundColor:
+      "linear-gradient(90deg, rgba(100,255,115,1) 0%, rgba(37,235,53,1) 100%)",
+    duration: 1000,
+  }).showToast();
+  setTimeout(() => {
+    location.reload();
+  }, 1500);
+});
+
+/**
+ * Delete Document from Firestore
+ */
