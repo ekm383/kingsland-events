@@ -59,6 +59,31 @@ profile.addEventListener("click", () => {
   );
   const ui = new UI();
   ui.showView(viewUserDetails);
+
+  const email = localStorage.getItem("email");
+  document.querySelector(
+    "body > div.col-md-6.text-center.col-lg > div > p:nth-child(1)"
+  ).innerText = email;
+
+  let data = querySnapshot;
+  const userId = localStorage.getItem("id");
+
+  const typeInfo = document.querySelector(
+    "body > div.col-md-6.text-center.col-lg > div > p.infoType"
+  );
+
+  let eventsArray = [];
+  data.forEach((item) => {
+    const event = item.data();
+    if (event.organizer == userId) {
+      eventsArray.push(item);
+
+      document.querySelector(
+        ".eventList"
+      ).innerHTML += `<li>${event.name}</li>`;
+    }
+  });
+  typeInfo.innerText = eventsArray.length;
 });
 
 // Show Organize Event
