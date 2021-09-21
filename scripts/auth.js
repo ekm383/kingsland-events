@@ -1,57 +1,29 @@
 import UI from "./UI.js";
-import { eventSetup, eventDetails } from "./index.js";
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js";
+import { eventSetup } from "./index.js";
+import { auth, querySnapshot } from "./firebase.js";
 import {
-  getAuth,
   createUserWithEmailAndPassword,
   signOut,
   signInWithEmailAndPassword,
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-auth.js";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  addDoc,
-} from "https://www.gstatic.com/firebasejs/9.0.2/firebase-firestore.js";
-
-/**
- * Firebase Config
- */
-const firebaseConfig = {
-  apiKey: "AIzaSyDOM6ruVDca0p3lwpT-Bh0Th2kbK4Ae92Y",
-  authDomain: "kingsland-events.firebaseapp.com",
-  projectId: "kingsland-events",
-  appId: "1:985445105023:web:0f5bc83e7e8e90597dee4a",
-};
-
-// Initialize Firebase
-const firebaseApp = initializeApp(firebaseConfig);
-const auth = getAuth(firebaseApp);
-const db = getFirestore(firebaseApp);
-
-// Get Data from Firestore Collection
-const querySnapshot = await getDocs(collection(db, "events"));
 
 /**
  * Firebase Auth State
  */
 onAuthStateChanged(auth, (user) => {
   const ui = new UI();
+  // Hide all Divs that are not selected
+  ui.hideViews();
+
   if (user) {
     // User signed in
     const { uid, email } = user;
     localStorage.setItem("id", uid);
     localStorage.setItem("email", email);
 
-    // Hide all Divs that are not selected
-    ui.hideViews();
-
     // Send data to the DOM
     eventSetup(querySnapshot.docs);
-    setTimeout(() => {
-      eventDetails(querySnapshot.docs);
-    }, 2000);
 
     // check if there are any events
     const eventsContainer = document.querySelector("#eventsHolder");
@@ -137,7 +109,12 @@ signUpHandler.addEventListener("submit", (e) => {
       .catch((error) => {
         const errorCode = error.code;
         const errorMessage = error.message;
-        // ..
+        Toastify({
+          text: errorMessage,
+          backgroundColor:
+            "linear-gradient(90deg, rgba(255,115,100,1) 0%, rgba(235,143,37,1) 100%)",
+          duration: 1000,
+        }).showToast();
       });
   }
 });
@@ -213,54 +190,3 @@ signInHandler.addEventListener("submit", (e) => {
       console.log(error);
     });
 });
-
-/**
- * Create New Event
- */
-const createEvent = document.querySelector("body > form:nth-child(6)")
-  .childNodes[11];
-createEvent.addEventListener("click", async (e) => {
-  e.preventDefault();
-
-  const userId = localStorage.getItem("id");
-
-  const name = document.querySelector("body > form:nth-child(6)").childNodes[3]
-    .childNodes[1].value;
-
-  const date = document.querySelector("body > form:nth-child(6)").childNodes[5]
-    .childNodes[1].value;
-
-  const description = document.querySelector("body > form:nth-child(6)")
-    .childNodes[7].childNodes[1].value;
-
-  const image = document.querySelector("body > form:nth-child(6)").childNodes[9]
-    .childNodes[1].value;
-  try {
-    const docRef = await addDoc(collection(db, "events"), {
-      name,
-      date,
-      description,
-      interested: 0,
-      organizer: userId,
-      image,
-    });
-
-    console.log("Document written with ID: ", docRef.id);
-  } catch (e) {
-    console.error("Error adding document: ", e);
-  }
-
-  Toastify({
-    text: "Added New Event!",
-    backgroundColor:
-      "linear-gradient(90deg, rgba(100,255,115,1) 0%, rgba(37,235,53,1) 100%)",
-    duration: 1000,
-  }).showToast();
-  setTimeout(() => {
-    location.reload();
-  }, 1500);
-});
-
-/**
- * Delete Document from Firestore
- */
